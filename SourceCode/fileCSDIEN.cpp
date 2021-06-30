@@ -15,7 +15,7 @@
 
 using namespace std;
 
-int isAppend{1};
+int isAppend{0};
 
 /*  Nhap ky (1 - 12) */
 int getPeriod()
@@ -342,23 +342,15 @@ void appendCSDIEN()
     std::cout << "Nhap ma khach hang muon them ban ghi:\n";
     int cCode = validCode();
 
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
-
-    ifstream rKH("KH.BIN", ios::binary);
-
+    /*  Kiem tra ton tai ma khach hang nay trong file KH chua */
     int isExistCCode{0};
-
-    Customer *data = new Customer[n];
-    for (int i = 0; i < n; i++)
+    Customer data;
+    ifstream rKH("KH.BIN", ios::binary);
+    while (rKH.read((char *) &data, sizeof(Customer)))
     {
-        rKH.read((char *) &data[i], sizeof(Customer));
-        if (data[i].cCode == cCode)
+        if (data.cCode == cCode)
         {
             isExistCCode = 1;
-            break;
         }
     }
     rKH.close();
@@ -544,16 +536,12 @@ void appendSelectivePeriod(int cCode, int index)
     ifstream rCS("CSDIEN.BIN", ios::binary);
     ofstream wCS("tempCSDIEN.BIN", ios::binary);
 
-    ElecStat singleRecord;
     ElecStat record[12];
 
-    while (rCS.read((char *) &singleRecord, sizeof(ElecStat)))
+    while (rCS.read((char *) &record[0], sizeof(ElecStat)))
     {
-        if (singleRecord.cCode == cCode)
+        if (record[0].cCode == cCode)
         {
-            record[0].cCode = singleRecord.cCode;
-            record[0].eDay = singleRecord.eDay;
-            record[0].eStat = singleRecord.eStat;
             /*  Cac ban ghi di theo goi 12 ban.
                 Nen khi tim duoc mot ban ghi co ma khach hang trung voi ma can them.
                 Can doc not 11 ban phia sau. */
@@ -565,10 +553,9 @@ void appendSelectivePeriod(int cCode, int index)
         }
         else
         {
-            wCS.write((char *) &singleRecord, sizeof(ElecStat));
+            wCS.write((char *) &record[0], sizeof(ElecStat));
         }
     }
-
     rCS.close();
     wCS.close();
 
@@ -679,7 +666,6 @@ void updateCSDIEN(int cCode, int index)
             if (confirm == 'y' || confirm == 'Y')
             {
                 std::cout << "y\n";
-                isAppend = 1;
                 appendSelectivePeriod(cCode, index);
                 break;
             }
@@ -687,11 +673,14 @@ void updateCSDIEN(int cCode, int index)
             {
                 std::cout << "n\n";
                 std::cout << "Ket thuc cap nhat!\n";
+                break;
             }
-            break;
         }
     }
-    updatePeriod(cCode, index);
+    else
+    {
+        updatePeriod(cCode, index);
+    }
 }
 
 /*  Cap nhat ban ghi cua ma khach hang cCode
@@ -763,9 +752,7 @@ void deleteCSDIEN()
     switch (control)
     {
     case '1':
-        if (confirmDel("CSDIEN.BIN"))
-        {
-        }
+        confirmDel("CSDIEN.BIN");
         break;
     case '2':
         deleteRecViaCode();
@@ -820,10 +807,7 @@ void deleteRecViaCode()
 /*  Xoa cac ban ghi ma (ma khach hang khong ton tai trong file KH.BIN) */
 void deleteGhostRecord()
 {
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
+    int n = getNumKH();
 
     Customer oldOne;
 
@@ -855,6 +839,7 @@ void deleteGhostRecord()
                 break;
             }
         }
+
         if (isExist)
         {
             for (int i = 0; i < 11; i++)
