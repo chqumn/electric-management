@@ -15,6 +15,21 @@
 
 using namespace std;
 
+int getNumKH()
+{
+    int n{};
+
+    Customer data;
+    ifstream rKH("KH.BIN", ios::binary);
+    while (rKH.read((char *) &data, sizeof(Customer)))
+    {
+        n++;
+    }
+    rKH.close();
+
+    return n;
+}
+
 /*  Chuan hoa ma khach hang/ma cong to */
 int validCode()
 {
@@ -61,26 +76,15 @@ bool isUniqueCode(int cCode, int finder)
         hoac trung voi ma khach hang truoc khi cap nhat (finder) */
     if (finder != cCode)
     {
-        ifstream rCountKH("countKH.txt");
-        int n{};
-        rCountKH >> n;
-        rCountKH.close();
-
         /*  Mo file KH.BIN de kiem tra */
         ifstream rKH("KH.BIN", ios::binary);
 
         /*  Doc danh sach khach hang */
-        Customer *data = new Customer[n];
-        for (int i = 0; i < n; i++)
-        {
-            rKH.read((char *) &data[i], sizeof(Customer));
-        }
-        rKH.close();
-
-        for (int i = 0; i < n; i ++)
+        Customer data;
+        while (rKH.read((char *) &data, sizeof(Customer)))
         {
             /*  Neu phat hien trung lap -> return false */
-            if (data[i].cCode == cCode)
+            if (data.cCode == cCode)
             {
                 std::cout << "Da ton tai ma khach hang!\n"
                           "Yeu cau nhap lai ma khach hang:\n";
@@ -237,26 +241,13 @@ void readKH()
         std::cout << "File rong!\n";
         return;
     }
-
-    ofstream wCountKH("countKH.txt");
-    wCountKH << n;
-    wCountKH.close();
 }
 
 /*  Them khach hang */
 void appendKH(int finder)
 {
     /*  Doc so khach hang hien co */
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
-
-    /*  Tang so khach hang len 1
-        Ghi lai vao file countKH*/
-    ofstream wCountKH("countKH.txt");
-    wCountKH << ++n;
-    wCountKH.close();
+    int n = getNumKH();
 
     /*  Mo file KH.BIN de ghi va kiem tra tinh trang */
     ofstream wKH("KH.BIN", ios::binary | ios_base::app);
@@ -266,12 +257,13 @@ void appendKH(int finder)
         return;
     }
 
-    std::cout << "Ban ghi thu " << n << ": \n";
+    std::cout << "Ban ghi thu " << ++n << ": \n";
 
     /*  Khach hang can them */
     Customer newOne;
 
-    /*  Them moi hoan toan: Nhap ma khach hang */
+    /*  Neu finder >= 0: Them khach hang co ma = finder
+        Them moi hoan toan: Nhap ma khach hang */
     if (finder < 0)
     {
         std::cout << "Nhap ma khach hang (VD:123456):\n";
@@ -343,112 +335,101 @@ void appendKH(int finder)
 /*  Cap nhat thong tin khach hang */
 void updateKH()
 {
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
+    int numKH = 0;
 
-    if (n != 0)
+    /*  Mo file KH.BIN de doc */
+    ifstream rKH("KH.BIN", ios::binary);
+
+    /*  Bien luu du lieu khach hang */
+    Customer data;
+
+    /*  Nhap ma khach hang muon thay doi */
+    std::cout << "Nhap ma khach hang can thay doi:\n";
+    int finder = validCode();
+
+    ofstream uKH("uKH.BIN", ios::binary);
+
+    /*  Bien kiem tra co ton tai ma khach hang can thay doi
+        Trong ban ghi ban dau khong */
+    int isExist{0};
+
+    while (rKH.read((char *) &data, sizeof(Customer)))
     {
-        /*  Mo file KH.BIN de doc */
-        ifstream rKH("KH.BIN", ios::binary);
-
-        /*  Mang luu du lieu khach hang */
-        Customer *data = new Customer[n];
-        for (int i = 0; i < n; i++)
+        numKH++;
+        if (data.cCode != finder)
         {
-            /*  Doc tat ca du lieu da co */
-            rKH.read((char *) &data[i], sizeof(Customer));
+            uKH.write((char *) &data, sizeof(Customer));
         }
-        rKH.close();
-
-        ofstream uKH("uKH.BIN", ios::binary);
-
-        /*  Bien kiem tra co ton tai ma khach hang can thay doi
-            Trong ban ghi ban dau khong */
-        int isExist{0};
-
-        /*  Nhap ma khach hang muon thay doi */
-        std::cout << "Nhap ma khach hang can thay doi:\n";
-        int finder = validCode();
-
-        for (int i = 0; i < n; i++)
+        else
         {
-            if (finder != data[i].cCode)
+            /*  Ton tai ma can thay doi */
+            isExist = 1;
+
+            /*  Hien ra ban ghi cu */
+            std::cout << "Cap nhat ban ghi so " << numKH << ":\n";
+            std::cout << "Ma khach hang: " << data.cCode << endl;
+            std::cout << "Ten khach hang: " << data.cName << endl;
+            std::cout << "Dia chi khach hang: " << data.cAdd << endl;
+            std::cout << "Ma cong to khach hang: " << data.cMeter << endl;
+            std::cout << endl;
+
+            /*  Cap nhat gia tri moi */
+            std::cout << "Cap nhat ma khach hang: \n";
+            do
             {
-                /*  Neu khac, ghi vao file temp */
-                uKH.write((char *) &data[i], sizeof(Customer));
+                data.cCode = validCode();
             }
-            else
-            {
-                /*  Ton tai ma can thay doi */
-                isExist = 1;
+            while (!isUniqueCode(data.cCode, finder));
 
-                /*  Hien ra ban ghi cu */
-                std::cout << "Cap nhat ban ghi so " << n + 1 << ":\n";
-                std::cout << "Ma khach hang: " << data[i].cCode << endl;
-                std::cout << "Ten khach hang: " << data[i].cName << endl;
-                std::cout << "Dia chi khach hang: " << data[i].cAdd << endl;
-                std::cout << "Ma cong to khach hang: " << data[i].cMeter << endl;
-                std::cout << endl;
+            std::cout << "Cap nhat ten khach hang: \n";
+            validName(data.cName);
 
-                /*  Cap nhat gia tri moi */
-                std::cout << "Cap nhat ma khach hang: \n";
-                do
-                {
-                    data[i].cCode = validCode();
-                }
-                while (!isUniqueCode(data[i].cCode, finder));
+            std::cout << "Cap nhat dia chi khach hang: \n";
+            getAddress(data.cAdd);
 
-                std::cout << "Cap nhat ten khach hang: \n";
-                validName(data[i].cName);
+            data.cMeter = data.cCode;
+            std::cout << "Ma cong to khach hang: " << data.cMeter << endl << endl;
 
-                std::cout << "Cap nhat dia chi khach hang: \n";
-                getAddress(data[i].cAdd);
+            /*  Viet ban ghi da cap nhat vao file temp */
+            uKH.write((char *) &data, sizeof(Customer));
 
-                data[i].cMeter = data[i].cCode;
-                std::cout << "Ma cong to khach hang: " << data[i].cMeter << endl << endl;
-
-                /*  Viet ban ghi da cap nhat vao file temp */
-                uKH.write((char *) &data[i], sizeof(Customer));
-
-                std::cout << "Da cap nhat ban ghi!\n";
-            }
-        }
-
-        uKH.close();
-
-        remove("KH.BIN");
-        rename("uKH.BIN", "KH.BIN");
-
-        if (!isExist)
-        {
-            std::cout << "Khong ton tai ma khach hang can cap nhat!\n";
-            std::cout << "Ban co muon them khach hang nay? (y/n)\n";
-
-            char confirm{};
-            while (1)
-            {
-                confirm = getch();
-
-                if (confirm == 'y' || confirm == 'Y')
-                {
-                    std::cout << endl;
-                    /*  Them nguoi dung co ma khach hang = finder */
-                    appendKH(finder);
-                    break;
-                }
-                else if (confirm == 'n' || confirm == 'N')
-                {
-                    break;
-                }
-            }
+            std::cout << "Da cap nhat ban ghi!\n";
         }
     }
-    else
+    uKH.close();
+
+    remove("KH.BIN");
+    rename("uKH.BIN", "KH.BIN");
+
+    if (numKH == 0)
     {
-        /* n = 0: file rong */
         std::cout << "Khong ton tai ban ghi nao de cap nhat!\n";
+        return;
+    }
+
+    if (!isExist)
+    {
+        std::cout << "Khong ton tai ma khach hang can cap nhat!\n";
+        std::cout << "Ban co muon them khach hang nay? (y/n)\n";
+
+        char confirm{};
+        while (1)
+        {
+            confirm = getch();
+
+            if (confirm == 'y' || confirm == 'Y')
+            {
+                std::cout << "y" << endl << endl;
+                /*  Them nguoi dung co ma khach hang = finder */
+                appendKH(finder);
+                break;
+            }
+            else if (confirm == 'n' || confirm == 'N')
+            {
+                std::cout << "n";
+                break;
+            }
+        }
     }
 }
 
@@ -473,11 +454,7 @@ void deleteKH()
     {
     case '1':
         /*  Xac nhan xoa toan bo */
-        if (confirmDel("KH.BIN"))
-        {
-            /*  Xoa file countKH.txt di kem */
-            remove("countKH.txt");
-        }
+        confirmDel("KH.BIN");
         break;
     case '2':
         deleteViaRecNum();
@@ -491,127 +468,106 @@ void deleteKH()
 /*  Xoa dua tren STT */
 void deleteViaRecNum()
 {
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
+    int n = getNumKH();
 
-    if (n != 0)
+    if (n == 0)
     {
-        std::cout << "Ban muon xoa ban ghi so:\n";
-        int recNum{};
-        std::cin >> recNum;
-        if (recNum > n)
-        {
-            std::cout << "Khong hop le!\n"
-                      "STT muon xoa lon hon so ban ghi hien co (" << n << " < " << recNum << ").\n";
-        }
-        else
-        {
-            ifstream rKH("KH.BIN", ios::binary);
+        std::cout << "Khong ton tai ban ghi nao de xoa!\n";
+        return;
+    }
 
-            Customer *data = new Customer[n];
-            for (int i = 0; i < n; i++)
-            {
-                rKH.read((char *) &data[i], sizeof(Customer));
-            }
-            rKH.close();
-
-            ofstream dKH("dKH.BIN", ios::binary);
-            for (int i = 0; i < recNum - 1; i++)
-            {
-                dKH.write((char *) &data[i], sizeof(Customer));
-            }
-            for (int i = recNum; i < n; i++)
-            {
-                dKH.write((char *) &data[i], sizeof(Customer));
-            }
-            dKH.close();
-            remove("KH.BIN");
-            rename("dKH.BIN", "KH.BIN");
-
-            std::cout << "Ban ghi so " << recNum << ":\n";
-            std::cout << "Ma khach hang: " << data[recNum - 1].cCode << endl;
-            std::cout << "Ten khach hang: " << data[recNum - 1].cName << endl;
-            std::cout << "Dia chi khach hang: " << data[recNum - 1].cAdd << endl;
-            std::cout << "Ma cong to khach hang: " << data[recNum - 1].cMeter << endl << endl;
-            std::cout << "Da xoa ban ghi!" << endl;
-
-            ofstream wTempCountKH("tempCountKH.txt");
-            wTempCountKH << --n;
-            wTempCountKH.close();
-
-            remove("countKH.txt");
-            rename("tempCountKH.txt", "countKH.txt");
-        }
+    std::cout << "Ban muon xoa ban ghi so:\n";
+    int delNum{};
+    std::cin >> delNum;
+    if (delNum > n)
+    {
+        std::cout << "Khong hop le!\n"
+                  "STT muon xoa lon hon so ban ghi hien co (" << delNum << " > " << n << ").\n";
     }
     else
     {
-        std::cout << "Khong ton tai ban ghi nao de xoa!\n";
+        ifstream rKH("KH.BIN", ios::binary);
+        ofstream dKH("dKH.BIN", ios::binary);
+
+        Customer data;
+
+        int numKH{0};
+
+        while (rKH.read((char *) &data, sizeof(Customer)))
+        {
+            numKH++;
+            if (delNum != numKH)
+            {
+                dKH.write((char *) &data, sizeof(Customer));
+            }
+            else
+            {
+                /*  Hien thi bna ghi can xoa
+                    Xoa = khong ghi vao file cap nhat */
+                std::cout << "Ban ghi so " << numKH << ":\n";
+                std::cout << "Ma khach hang: " << data.cCode << endl;
+                std::cout << "Ten khach hang: " << data.cName << endl;
+                std::cout << "Dia chi khach hang: " << data.cAdd << endl;
+                std::cout << "Ma cong to khach hang: " << data.cMeter << endl << endl;
+                std::cout << "Da xoa ban ghi!" << endl;
+            }
+        }
+
+        rKH.close();
+        dKH.close();
+        remove("KH.BIN");
+        rename("dKH.BIN", "KH.BIN");
     }
 }
 
 /*  Xoa dua vao ma khach hang */
 void deleteViaCode()
 {
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
+    int n = getNumKH();
 
-    if (n != 0)
+    if (n == 0)
     {
-        std::cout << "Nhap ma khach hang can xoa:\n";
-        int deleter{};
-        std::cin >> deleter;
+        std::cout << "Khong ton tai ban ghi nao de xoa!\n";
+        return;
+    }
 
-        int location{ -1 };
+    std::cout << "Nhap ma khach hang can xoa:\n";
+    int deleter{};
+    std::cin >> deleter;
 
-        Customer *data = new Customer[n];
-        ifstream rKH("KH.BIN", ios::binary);
-        ofstream wDelKH("dKH.BIN", ios::binary);
-        for (int i = 0; i < n; i ++)
+    Customer data;
+    int numKH{};
+    int isExist{};
+
+    ifstream rKH("KH.BIN", ios::binary);
+    ofstream dKH("dKH.BIN", ios::binary);
+
+    while (rKH.read((char *) &data, sizeof(Customer)))
+    {
+        numKH++;
+        if (data.cCode != deleter)
         {
-            rKH.read((char *) &data[i], sizeof(Customer));
-            if (data[i].cCode != deleter)
-            {
-                wDelKH.write((char *) &data[i], sizeof(Customer));
-            }
-            else
-            {
-                location = i;
-            }
-        }
-
-        rKH.close();
-        wDelKH.close();
-
-        if (location != -1)
-        {
-            ofstream wTempCountKH("wTempCountKH.txt");
-            wTempCountKH << --n;
-            wTempCountKH.close();
-
-            remove("countKH.txt");
-            rename("wTempCountKH.txt", "countKH.txt");
-
-            remove("KH.BIN");
-            rename("dKH.BIN", "KH.BIN");
-
-            std::cout << "Ban ghi so " << location + 1 << ":\n";
-            std::cout << "Ma khach hang: " << data[location].cCode << endl;
-            std::cout << "Ten khach hang: " << data[location].cName << endl;
-            std::cout << "Dia chi khach hang: " << data[location].cAdd << endl;
-            std::cout << "Ma cong to khach hang: " << data[location].cMeter << endl << endl;
-            std::cout << "Da xoa ban ghi!" << endl;
+            dKH.write((char *) &data, sizeof(Customer));
         }
         else
         {
-            std::cout << "Khong ton tai ma khach hang can xoa!\n";
+            isExist = 1;
+            std::cout << "\nXoa ban ghi so " << numKH << ":\n";
+            std::cout << "Ma khach hang: " << data.cCode << endl;
+            std::cout << "Ten khach hang: " << data.cName << endl;
+            std::cout << "Dia chi khach hang: " << data.cAdd << endl;
+            std::cout << "Ma cong to khach hang: " << data.cMeter << endl << endl;
+            std::cout << "Da xoa ban ghi!" << endl;
         }
     }
-    else
+
+    rKH.close();
+    dKH.close();
+    remove("KH.BIN");
+    rename("dKH.BIN", "KH.BIN");
+
+    if (!isExist)
     {
-        std::cout << "Khong ton tai ban ghi nao de xoa!\n";
+        std::cout << "Khong ton tai ma khach hang can xoa!\n";
     }
 }

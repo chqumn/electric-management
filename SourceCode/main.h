@@ -11,6 +11,6 @@ void flowControl();
 void workWithFile();
 
 /*  Xac nhan xoa file *fileName */
-bool confirmDel(std::string fileName);
+void confirmDel(std::string fileName);
 
 #endif // QLDIEN1_H_INCLUDED
