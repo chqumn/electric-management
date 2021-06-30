@@ -15,8 +15,13 @@ struct Bill
     int isExist{0};
 };
 
-/*  Tao va hien thi hoa don kha dung */
+void HDThings();
+
+/*  Tao va ghi vao file HOADON.BIN */
 void createBill();
+
+/* Doc file HOADON.BIN */
+void readBill();
 
 /*  Money calculate */
 int monCalculate(int eUsed);

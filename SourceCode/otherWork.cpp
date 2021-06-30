@@ -182,10 +182,7 @@ void printBill()
     int cCode = validCode();
     std::cout << endl;
 
-    ifstream rCountKH("countKH.txt");
-    int n{};
-    rCountKH >> n;
-    rCountKH.close();
+    int n = getNumKH();
 
     int isExistCus{0};
 

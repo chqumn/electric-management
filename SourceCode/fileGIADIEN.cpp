@@ -15,6 +15,21 @@
 
 using namespace std;
 
+int getNumGIADIEN()
+{
+    int n{};
+
+    ElecPrice scope;
+    ifstream rGD("GIADIEN.BIN", ios::binary);
+    while (rGD.read((char *) &scope, sizeof(ElecPrice)))
+    {
+        n++;
+    }
+    rGD.close();
+
+    return n;
+}
+
 /*  Viet gia dien (them hoac sua) */
 void writeGIADIEN(int n, int level)
 {
@@ -290,63 +305,40 @@ void GIADIENThings()
 /*  Doc file GIADIEN.BIN */
 void readGIADIEN()
 {
-    ifstream rCountGD("countGD.txt");
-    int n{};
-    rCountGD >> n;
-    rCountGD.close();
-
-    if (n == 0)
-    {
-        std::cout << "File rong!\n";
-        return;
-    }
-
     ifstream rGD("GIADIEN.BIN", ios::binary);
 
-    if (!rGD.good())
-    {
-        std::cout << "Xay ra loi khi doc file!\n";
-        return;
-    }
-
-    ElecPrice *scope = new ElecPrice[n];
+    int n{};
+    ElecPrice scope;
 
     system("cls");
 
     std::cout << "+---------------------------------------+\n";
     std::cout << "| Muc\t| Tu kWh so\t| Muc gia\t|\n";
     std::cout << "+---------------------------------------+\n";
-    for (int i = 0; i < n; i++)
+    while (rGD.read((char *) &scope, sizeof(ElecPrice)))
     {
-        rGD.read((char *) &scope[i], sizeof(ElecPrice));
         std::cout << "| ";
-        std::cout << setw(5) << std::setfill(' ') << i + 1 << "\t| ";
-        std::cout << setw(14) << std::setfill(' ') << scope[i].eUse << "| ";
-        std::cout << setw(14) << std::setfill(' ') << scope[i].ePrc << "|\n";
+        std::cout << setw(5) << std::setfill(' ') << ++n << "\t| ";
+        std::cout << setw(14) << std::setfill(' ') << scope.eUse << "| ";
+        std::cout << setw(14) << std::setfill(' ') << scope.ePrc << "|\n";
     }
     std::cout << "+---------------------------------------+\n";
 
+    if (n == 0)
+    {
+        system("cls");
+        std::cout << "File rong!\n";
+    }
+
     rGD.close();
-    delete[] scope;
 }
 
 /*  Them mot muc gia dien */
 void appendGIADIEN()
 {
-    ifstream rCountGD("countGD.txt");
-    int n{};
-    rCountGD >> n;
-    rCountGD.close();
+    int n = getNumGIADIEN();
 
-    ofstream wCountGD("tempCountGD.txt");
-    n++;
-    wCountGD << n;
-    wCountGD.close();
-
-    remove("countGD.txt");
-    rename("tempCountGD.txt", "countGD.txt");
-
-    writeGIADIEN(n, n - 1);
+    writeGIADIEN(n + 1, n);
 
     std::cout << "Ban co muon nhap them khong? (y/n)\n";
     char control{};
@@ -372,10 +364,7 @@ void appendGIADIEN()
 /*  Cap nhat gia dien tai mot muc */
 void updateGIADIEN()
 {
-    ifstream rCountGD("countGD.txt");
-    int n{};
-    rCountGD >> n;
-    rCountGD.close();
+    int n = getNumGIADIEN();
 
     std::cout << "Nhap muc gia dien muon cap nhat (hien co " << n << " muc gia):\n";
     std::cout << "Muc: ";
@@ -412,10 +401,7 @@ void deleteGIADIEN()
     {
     case '1':
         std::cout << 1 << endl;
-        if (confirmDel("GIADIEN.BIN"))
-        {
-            remove("countGD.txt");
-        }
+        confirmDel("GIADIEN.BIN");
         break;
     case '2':
         std::cout << 2 << endl;
@@ -427,10 +413,7 @@ void deleteGIADIEN()
 /*  Xoa mot muc gia dien */
 void deletePriceLevel()
 {
-    ifstream rCountGD("countGD.txt");
-    int n{};
-    rCountGD >> n;
-    rCountGD.close();
+    int n = getNumGIADIEN();
 
     if (n == 0)
     {
@@ -439,7 +422,6 @@ void deletePriceLevel()
     }
 
     ifstream rGD("GIADIEN.BIN", ios::binary);
-
     if (!rGD.good())
     {
         std::cout << "Xay ra loi khi doc file!\n";
@@ -495,9 +477,5 @@ void deletePriceLevel()
 
     std::cout << "Da xoa muc gia so " << level + 1 << ".\n";
 
-    ofstream wCountGD("countGD.txt");
-    n--;
-    wCountGD << n;
-    wCountGD.close();
     delete[] scope;
 }

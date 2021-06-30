@@ -10,6 +10,9 @@ struct ElecPrice
     int ePrc{-1};
 };
 
+/*  Dem so muc gia dien */
+int getNumGIADIEN();
+
 /*  Viet gia dien (them hoac sua) */
 void writeGIADIEN(int n, int level);
 

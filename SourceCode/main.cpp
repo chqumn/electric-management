@@ -42,7 +42,7 @@ void flowControl()
         break;
     case '2':
         system("cls");
-        createBill();
+        HDThings();
         isContinue();
         break;
     case '3':
