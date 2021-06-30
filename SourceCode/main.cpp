@@ -126,7 +126,7 @@ int main()
 }
 
 /*  Xac nhan xoa file *fileName */
-bool confirmDel(std::string fileName)
+void confirmDel(std::string fileName)
 {
     char confirm{};
     std::cout << "Ban co chac chan muon xoa file " << fileName << "? (y/n)\n";
@@ -139,14 +139,13 @@ bool confirmDel(std::string fileName)
             std::cout << "y\n";
             remove(fileName.c_str());
             std::cout << "Da xoa file!\n";
-            return true;
+            return;
         }
         else if (confirm == 'n' || confirm == 'N')
         {
             std::cout << "n\n";
             std::cout << "Da huy bo thao tac xoa file!\n";
-            return false;
+            return;
         }
     }
-    return false;
 }

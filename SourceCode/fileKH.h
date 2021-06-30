@@ -12,6 +12,9 @@ struct Customer
     int cMeter{};
 };
 
+/*  Doc so khach hang trong file KH.BIN */
+int getNumKH();
+
 /*  Dieu huong lam viec voi file KH.BIN */
 void KHThings();
 
